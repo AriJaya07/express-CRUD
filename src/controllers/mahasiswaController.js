@@ -20,7 +20,10 @@ export const createMahasiswa = async (req, res, next) => {
 // Read all
 export const getAllMahasiswa = async (req, res, next) => {
   try {
-    const list = await Mahasiswa.find().sort({ createdAt: -1 });
+    const list = await Mahasiswa.find()
+      .populate("jurusan", "nama kode") 
+      .sort({ createdAt: -1 });
+
     res.json(list);
   } catch (err) {
     next(err);
@@ -31,9 +34,13 @@ export const getAllMahasiswa = async (req, res, next) => {
 export const getMahasiswaById = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const mhs = await Mahasiswa.findById(id);
+
+    const mhs = await Mahasiswa.findById(id)
+      .populate("jurusan", "nama kode");
+
     if (!mhs)
       return res.status(404).json({ message: "Mahasiswa tidak ditemukan" });
+
     res.json(mhs);
   } catch (err) {
     next(err);
