@@ -8,7 +8,7 @@ const MahasiswaSchema = new mongoose.Schema({
   angkatan: Number,
   email: String
 }, {
-  collection: "dataSiswa"  // biar tidak jadi `mahasiswas`
+  collection: "dataSiswa" 
 });
 
 const Mahasiswa = mongoose.model("Mahasiswa", MahasiswaSchema);
