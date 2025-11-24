@@ -1,103 +1,140 @@
-📚 Mahasiswa CRUD API (Express + MongoDB)
+📘 Laporan Relasi Data Mahasiswa & Jurusan
+Menggunakan MongoDB, Mongoose, dan Express.js
+📌 1. Pendahuluan
 
-Project sederhana untuk mengelola data mahasiswa menggunakan Express.js, MongoDB, dan Mongoose.
-Fitur yang tersedia: Create, Read, Update, dan Delete (CRUD).
+Pada proyek ini dibuat dua entitas utama:
 
-🚀 Tech Stack
+Mahasiswa
 
-Node.js
+Jurusan
 
-Express.js
+Keduanya memiliki hubungan one-to-many, di mana:
 
-MongoDB
+Satu Jurusan dapat memiliki banyak Mahasiswa
 
-Mongoose
+Setiap Mahasiswa hanya memiliki satu Jurusan
 
-Nodemon (dev)
+Implementasi menggunakan MongoDB sebagai database dan Mongoose sebagai ODM (Object Data Modeling).
 
-📦 Install & Setup
-1️⃣ Clone project
-git clone <repo-url>
-cd nama-folder-project
+📌 2. Struktur Koleksi (Collections)
+🗂️ Koleksi: jurusan
 
-2️⃣ Install dependencies
-npm install
+Contoh dokumen:
 
-3️⃣ Setup environment variable
+{
+  "_id": "6924485ea6af9f4782dd65ed",
+  "nama": "Sistem Informasi",
+  "kode": "SI",
+  "createdAt": "...",
+  "updatedAt": "..."
+}
 
-Buat file .env:
+🗂️ Koleksi: mahasiswa
 
-MONGO_URI=mongodb://localhost:27017/siswaDB
-PORT=5000
+Contoh dokumen:
 
+{
+  "_id": "69244bf7d6af9f4782dd6611",
+  "nama": "Jaya Test",
+  "nim": "0857212233",
+  "jurusan": "6924485ea6af9f4782dd65ed",
+  "angkatan": 2025,
+  "email": "jaya@example.com",
+  "createdAt": "...",
+  "updatedAt": "..."
+}
 
-Pastikan siswaDB sesuai dengan nama database kamu di MongoDB / Compass.
+📌 3. Relasi Data
 
-▶️ Menjalankan server
-Development mode
-npm run dev
+Dalam Mongoose, relasi dilakukan menggunakan ref pada field jurusan.
 
-Production mode
-npm start
+📄 Contoh Schema Mahasiswa
+const MahasiswaSchema = new mongoose.Schema({
+  nama: String,
+  nim: { type: String, unique: true },
+  jurusan: { type: mongoose.Schema.Types.ObjectId, ref: "Jurusan" },
+  angkatan: Number,
+  email: String,
+}, { timestamps: true });
 
-📁 Project Structure
-src/
-  ├── models/
-  │     └── Mahasiswa.js
-  ├── routes/
-  │     └── mahasiswaRoutes.js
-  ├── controllers/
-  │     └── mahasiswaController.js
-  ├── index.js
-.env
-package.json
+📄 Contoh Schema Jurusan
+const JurusanSchema = new mongoose.Schema({
+  nama: String,
+  kode: String,
+}, { timestamps: true });
 
-🧪 API Endpoints
-➕ Create Mahasiswa
+📌 4. Cara Menyimpan Data Relasi
+➤ Kirim request POST ke /api/mahasiswa:
 
-POST /api/mahasiswa
 Body JSON:
 
 {
-  "nama": "Joko",
-  "nim": "123456",
-  "jurusan": "Informatika",
-  "angkatan": 2021,
-  "email": "joko@example.com"
+  "nama": "Jaya Test",
+  "nim": "0857212233",
+  "jurusan": "6924485ea6af9f4782dd65ed",
+  "angkatan": 2025,
+  "email": "jaya@example.com"
 }
 
-📄 Get All Mahasiswa
 
-GET /api/mahasiswa
+Catatan:
+jurusan harus berisi ObjectId, bukan object { type:"", ref:"" }.
 
-📄 Get Mahasiswa by ID
+📌 5. Cara Menampilkan Mahasiswa Beserta Nama Jurusan (Populate)
 
-GET /api/mahasiswa/:id
+Pada controller:
 
-✏️ Update Mahasiswa
+const list = await Mahasiswa.find().populate("jurusan");
+res.json(list);
 
-PUT /api/mahasiswa/:id
 
-🗑️ Delete Mahasiswa
+Hasil output:
 
-DELETE /api/mahasiswa/:id
+{
+  "nama": "Jaya Test",
+  "nim": "0857212233",
+  "jurusan": {
+    "_id": "6924485ea6af9f4782dd65ed",
+    "nama": "Sistem Informasi",
+    "kode": "SI"
+  },
+  "angkatan": 2025,
+  "email": "jaya@example.com"
+}
 
-💾 Database
+📌 6. Alur CRUD
+🟢 Create Mahasiswa
 
-Kamu bisa melihat collection di:
+Validasi NIM unik
 
-MongoDB Compass
+Simpan dengan ObjectId jurusan
 
-Atau MongoDB Atlas (kalau online)
+Return data mahasiswa
 
-Collection yang digunakan:
+🔵 Read (Get All)
+Mahasiswa.find().populate("jurusan")
 
-siswaDB → dataSiswa
+🔵 Read (Get By ID)
+Mahasiswa.findById(id).populate("jurusan")
 
-🙌 Contributing
+🟡 Update
+findByIdAndUpdate(id, updates, { new: true, runValidators: true })
 
-Pull request terbuka! Tinggal fork, buat branch, dan kirim PR.
+🔴 Delete
+findByIdAndDelete(id)
 
-📧 Contact
+📌 7. Diagram Relasi (Simple ERD)
++-----------+        1 ----- ∞        +--------------+
+|  Jurusan  | ----------------------> |  Mahasiswa   |
++-----------+                        +--------------+
+| _id       |                        | _id          |
+| nama      |                        | nama         |
+| kode      |                        | nim          |
++-----------+                        | jurusan (FK) |
+                                     | angkatan     |
+                                     | email        |
+                                     +--------------+
 
-Kalau ada error atau bingung, tinggal tanya aja. Siap bantu 🔥
+📌 8. Kesimpulan
+
+Sistem relasi Mahasiswa ↔ Jurusan menggunakan Mongoose memberikan fleksibilitas pada pengelolaan data akademik berbasis dokumen. Dengan populate, proses join berjalan mudah dan efisien di MongoDB.
